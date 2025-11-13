@@ -53,7 +53,7 @@ def get_students():
         
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, fname, lname, nickname, phone, image_url FROM students ORDER BY created_at DESC")
+            cur.execute("SELECT id, fname, lname, nickname, phone, image_url FROM students ORDER BY fname")
             students = cur.fetchall()
         return jsonify(students), 200
     except Exception as e:
@@ -97,71 +97,5 @@ def add_student():
     finally:
         conn.close()
 
-# --- (โค้ดใหม่) ---
-# Route สำหรับอัปเดตข้อมูลนักเรียน (PUT)
-@app.route('/api/students/<int:student_id>', methods=['PUT'])
-def update_student(student_id):
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    fname = data.get('fname')
-    lname = data.get('lname')
-    nickname = data.get('nickname')
-    phone = data.get('phone')
-    image_url = data.get('image_url')
-
-    if not fname or not lname:
-        return jsonify({"error": "First name and last name are required."}), 400
-
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({"error": "Database connection failed"}), 500
-
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                UPDATE students
-                SET fname = %s, lname = %s, nickname = %s, phone = %s, image_url = %s
-                WHERE id = %s;
-                """,
-                (fname, lname, nickname, phone, image_url, student_id)
-            )
-        conn.commit()
-        
-        if cur.rowcount == 0:
-            return jsonify({"error": "Student not found"}), 404
-            
-        return jsonify({"message": "Student updated successfully."}), 200
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
-# --- (โค้ดใหม่) ---
-# Route สำหรับลบข้อมูลนักเรียน (DELETE)
-@app.route('/api/students/<int:student_id>', methods=['DELETE'])
-def delete_student(student_id):
-    conn = gecst_db_connection()
-    if conn is None:
-        return jsonify({"error": "Database connection failed"}), 500
-
-    try:
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM students WHERE id = %s;", (student_id,))
-        conn.commit()
-
-        if cur.rowcount == 0:
-            return jsonify({"error": "Student not found"}), 404
-            
-        return jsonify({"message": "Student deleted successfully."}), 200
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
 # Vercel จะเรียกใช้ 'app' นี้
-# เราไม่จำเป็นต้องใช้ app.run()cs
+# เราไม่จำเป็นต้องใช้ app.run()

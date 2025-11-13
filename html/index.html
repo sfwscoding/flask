@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบข้อมูลนักเรียน (CRUD)</title>
+    <title>ระบบข้อมูลนักเรียน</title>
     <!-- 
       นี่คือการโหลด Tailwind CSS เพื่อให้หน้าเว็บสวยงามและเป็น mobile-first ครับ
       https://tailwindcss.com/
@@ -40,10 +40,6 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
-        }
-        /* ซ่อน modal ไว้ก่อน */
-        #editModal {
-            display: none;
         }
     </style>
 </head>
@@ -100,68 +96,14 @@
 
     </div>
 
-    <!-- Edit Student Modal -->
-    <div id="editModal" class="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-75">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-gray-800">แก้ไขข้อมูลนักเรียน</h2>
-                    <button id="closeModalButton" class="text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-                <form id="editForm" class="space-y-4">
-                    <input type="hidden" id="edit_id" name="id">
-                    <div>
-                        <label for="edit_fname" class="block text-sm font-medium text-gray-700">ชื่อจริง</label>
-                        <input type="text" id="edit_fname" name="fname" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="edit_lname" class="block text-sm font-medium text-gray-700">นามสกุล</label>
-                        <input type="text" id="edit_lname" name="lname" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="edit_nickname" class="block text-sm font-medium text-gray-700">ชื่อเล่น</label>
-                        <input type="text" id="edit_nickname" name="nickname" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="edit_phone" class="block text-sm font-medium text-gray-700">เบอร์โทร</label>
-                        <input type="tel" id="edit_phone" name="phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="edit_image_url" class="block text-sm font-medium text-gray-700">URL รูปภาพ</label>
-                        <input type="url" id="edit_image_url" name="image_url" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div class="flex space-x-4">
-                        <button type="button" id="cancelEditButton" class="w-1/2 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            ยกเลิก
-                        </button>
-                        <button type="submit" id="updateButton" class="w-1/2 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                            อัปเดต
-                        </button>
-                    </div>
-                </form>
-                <div id="editFormMessage" class="mt-4 text-center"></div>
-            </div>
-        </div>
-    </div>
-
-
     <script>
         const API_URL = 'https://flask.ssth.app/api'; // Vercel จะ route ไปที่ /api/index.py อัตโนมัติ
         const studentList = document.getElementById('studentList');
         const studentForm = document.getElementById('studentForm');
         const submitButton = document.getElementById('submitButton');
-        const formMessage = doccsument.getElementById('formMessage');
+        const formMessage = document.getElementById('formMessage');
         const loading = document.getElementById('loading');
         const placeholderImg = "https://placehold.co/100x100/e0e0e0/777?text=No+Image";
-
-        // --- Modal Elements ---
-        const editModal = document.getElementById('editModal');
-        const editForm = document.getElementById('editForm');
-        const editFormMessage = document.getElementById('editFormMessage');
-        const updateButton = document.getElementById('updateButton');
-        const closeModalButton = document.getElementById('closeModalButton');
-        const cancelEditButton = document.getElementById('cancelEditButton');
-
 
         // Function to fetch all students
         async function fetchStudents() {
@@ -194,19 +136,10 @@
         // Function to create student card HTML
         function createStudentCard(student) {
             const card = document.createElement('div');
-            card.className = 'flex items-center bg-white p-4 rounded-lg shadow-md border border-gray-200';
+            card.className = 'flex items-center bg-white p-4 rounded-lg shadow-md border border-gray-200 transition-transform transform hover:scale-105';
             
             const [id, fname, lname, nickname, phone, imageUrl] = student;
-            card.id = `student-card-${id}`; // Add id for easy removal
             
-            // Store data as data attributes for easy editing
-            card.dataset.id = id;
-            card.dataset.fname = fname;
-            card.dataset.lname = lname;
-            card.dataset.nickname = nickname || '';
-            card.dataset.phone = phone || '';
-            card.dataset.imageUrl = imageUrl || '';
-
             card.innerHTML = `
                 <img src="${imageUrl || placeholderImg}" 
                      alt="${fname} ${lname}" 
@@ -216,19 +149,6 @@
                     <h3 class="text-lg md:text-xl font-semibold text-gray-900">${fname} ${lname}</h3>
                     <p class="text-gray-600">ชื่อเล่น: ${nickname || '-'}</p>
                     <p class="text-sm text-gray-500">เบอร์โทร: ${phone || '-'}</p>
-                </div>
-                <!-- Edit/Delete Buttons -->
-                <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 ml-4">
-                    <button 
-                        class="px-3 py-1 text-sm font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600"
-                        onclick="showEditModal(this.closest('[data-id]'))">
-                        แก้ไข
-                    </button>
-                    <button 
-                        class="px-3 py-1 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
-                        onclick="handleDeleteClick(this, ${id})">
-                        ลบ
-                    </button>
                 </div>
             `;
             return card;
@@ -279,127 +199,13 @@
             }
         }
 
-        // --- Edit Modal Functions ---
-        function showEditModal(cardElement) {
-            const data = cardElement.dataset;
-            document.getElementById('edit_id').value = data.id;
-            document.getElementById('edit_fname').value = data.fname;
-            document.getElementById('edit_lname').value = data.lname;
-            document.getElementById('edit_nickname').value = data.nickname;
-            document.getElementById('edit_phone').value = data.phone;
-            document.getElementById('edit_image_url').value = data.imageUrl;
-            
-            editFormMessage.innerText = '';
-            editModal.style.display = 'block';
-        }
-
-        function hideEditModal() {
-            editModal.style.display = 'none';
-            editForm.reset();
-        }
-
-        async function handleUpdateStudent(event) {
-            event.preventDefault();
-            updateButton.disabled = true;
-            updateButton.innerText = 'กำลังอัปเดต...';
-            editFormMessage.innerText = '';
-
-            const studentId = document.getElementById('edit_id').value;
-            const updatedData = {
-                fname: document.getElementById('edit_fname').value,
-                lname: document.getElementById('edit_lname').value,
-                nickname: document.getElementById('edit_nickname').value,
-                phone: document.getElementById('edit_phone').value,
-                image_url: document.getElementById('edit_image_url').value
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/students/${studentId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Server error');
-                }
-                
-                editFormMessage.innerText = 'อัปเดตข้อมูลสำเร็จ!';
-                editFormMessage.className = 'mt-4 text-center text-green-600';
-                
-                await fetchStudents(); // Refresh the list
-                setTimeout(hideEditModal, 1000); // Hide modal after 1 sec
-
-            } catch (error) {
-                console.error('Error updating student:', error);
-                editFormMessage.innerText = `เกิดข้อผิดพลาด: ${error.message}`;
-                editFormMessage.className = 'mt-4 text-center text-red-600';
-            } finally {
-                updateButton.disabled = false;
-                updateButton.innerText = 'อัปเดต';
-            }
-        }
-
-        // --- Delete Functions ---
-        function handleDeleteClick(button, id) {
-            // สร้างปุ่ม confirmation แบบง่ายๆ ไม่ต้องใช้ modal/alert
-            if (button.dataset.confirm === 'true') {
-                deleteStudent(id);
-            } else {
-                // First click
-                const originalText = button.innerText;
-                button.innerText = 'ยืนยันลบ?';
-                button.classList.add('bg-red-700'); // Darker red
-                button.dataset.confirm = 'true';
-
-                // Reset after 3 seconds if not clicked again
-                setTimeout(() => {
-                    if (button.dataset.confirm === 'true') {
-                        button.innerText = originalText;
-                        button.classList.remove('bg-red-700');
-                        delete button.dataset.confirm;
-                    }
-                }, 3000);
-            }
-        }
-
-        async function deleteStudent(id) {
-            try {
-                const response = await fetch(`${API_URL}/students/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Server error');
-                }
-
-                // Remove card from UI directly
-                const cardToRemove = document.getElementById(`student-card-${id}`);
-                if (cardToRemove) {
-                    cardToRemove.remove();
-                }
-                // หรือจะ fetchStudents() ใหม่อีกรอบก็ได้
-                // await fetchStudents();
-
-            } catch (error) {
-                console.error('Error deleting student:', error);
-                // อาจจะแสดงข้อความ error ใกล้ๆ ปุ่ม
-            }
-        }
-
-        // --- Initial Load & Event Listeners ---
+        // Initial load
         document.addEventListener('DOMContentLoaded', () => {
             fetchStudents();
             studentForm.addEventListener('submit', addStudent);
-            
-            // Modal Listeners
-            editForm.addEventListener('submit', handleUpdateStudent);
-            closeModalButton.addEventListener('click', hideEditModal);
-            cancelEditButton.addEventListener('click', hideEditModal);
 
-            console.log('ไปที่ URL/api/init หนึ่งครั้งเพื่อสร้างตารางในฐานข้อมูล (ถ้ายังไม่ได้ทำ)');
+            // แนะนำให้ไป /api/init หนึ่งครั้งเพื่อสร้างตาราง
+            console.log('ไปที่ URL/api/init หนึ่งครั้งเพื่อสร้างตารางในฐานข้อมูล');
         });
 
     </script>
