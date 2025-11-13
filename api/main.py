@@ -53,7 +53,7 @@ def get_students():
         
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, fname, lname, nickname, phone, image_url FROM students ORDER BY fname DESC")
+            cur.execute("SELECT id, fname, lname, nickname, phone, image_url FROM students ORDER BY fname AESC")
             students = cur.fetchall()
         return jsonify(students), 200
     except Exception as e:
